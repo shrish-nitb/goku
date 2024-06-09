@@ -1,39 +1,29 @@
 package local
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
-	"io"
 	"net/http"
-	"strings"
+	"sync"
 )
 
-func (list TodoList) Create() http.HandlerFunc {
+func (List TodoList) Create() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var TodoMessage TodoMessage
-		body, err := io.ReadAll(r.Body)
-		defer r.Body.Close()
+		TodoMessage, _ := r.Context().Value("TodoMessage").(TodoMessage)
 
-		if err != nil || json.Unmarshal(body, &TodoMessage) != nil || strings.Trim(string(TodoMessage.Task), " ") == "" {
-			http.Error(w, "Invalid request payload", http.StatusBadRequest)
-			return
-		}
-
-		if _, exist := list[TodoMessage.Id]; exist {
+		if _, exist := List[TodoMessage.Id]; exist {
 			http.Error(w, "Resource already exist", http.StatusConflict)
 			return
 		}
-		fmt.Println("qqq")
-		list[TodoMessage.Id] = TodoMessage.Task
-		fmt.Println("qq")
-		response, err := json.Marshal(list)
 
-		if err != nil {
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
-		}
+		var mu sync.Mutex
+		List[TodoMessage.Id] = Task{Mutex: &mu, Value: TodoMessage.Task.Value}
 
-		w.WriteHeader(http.StatusOK)
-		w.Write(response)
+		fmt.Println(List)
+		//Till here it is working as intended
+
+		ctx := context.WithValue(r.Context(), "Response", List)
+		r = r.WithContext(ctx)
+
 	})
 }

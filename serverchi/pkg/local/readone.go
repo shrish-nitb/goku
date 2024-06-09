@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (List TodoList) Delete() http.HandlerFunc {
+func (List TodoList) ReadOne() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var TodoMessage TodoMessage
 		body, err := io.ReadAll(r.Body)
@@ -22,12 +22,7 @@ func (List TodoList) Delete() http.HandlerFunc {
 			return
 		}
 
-		List[TodoMessage.Id].Mutex.Lock()
-		defer List[TodoMessage.Id].Mutex.Unlock()
-
-		delete(List, TodoMessage.Id)
-
-		response, err := json.Marshal(List)
+		response, err := json.Marshal(List[TodoMessage.Id])
 
 		if err != nil {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)

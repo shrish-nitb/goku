@@ -13,7 +13,7 @@ func (List TodoList) Update() http.HandlerFunc {
 		body, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
 
-		if err != nil || json.Unmarshal(body, &TodoMessage) != nil || strings.Trim(string(TodoMessage.Task), " ") == "" {
+		if err != nil || json.Unmarshal(body, &TodoMessage) != nil || strings.Trim(string(TodoMessage.Task.Value), " ") == "" {
 			http.Error(w, "Invalid request payload", http.StatusBadRequest)
 			return
 		}
@@ -23,7 +23,10 @@ func (List TodoList) Update() http.HandlerFunc {
 			return
 		}
 
-		List[TodoMessage.Id] = TodoMessage.Task
+		List[TodoMessage.Id].Mutex.Lock()
+		defer List[TodoMessage.Id].Mutex.Unlock()
+
+		List[TodoMessage.Id] = Task{Mutex: List[TodoMessage.Id].Mutex, Value: TodoMessage.Task.Value}
 
 		response, err := json.Marshal(List)
 

@@ -1,7 +1,14 @@
 package local
 
+import (
+	"sync"
+)
+
 type Id string
-type Task string
+type Task struct {
+	Mutex *sync.Mutex `json:"-"`
+	Value string      `json:"value"`
+}
 
 type TodoMessage struct {
 	Id   Id   `json:"id"`
@@ -11,5 +18,6 @@ type TodoMessage struct {
 type TodoList map[Id]Task
 
 func NewTodos() *TodoList {
-	return new(TodoList)
+	var init = make(TodoList)
+	return &init
 }
