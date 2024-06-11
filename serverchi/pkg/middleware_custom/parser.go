@@ -9,6 +9,14 @@ import (
 	"strings"
 )
 
+func Marshal() {
+
+}
+
+func Unmarshal() {
+
+}
+
 func Parser(f http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var TodoMessage local.TodoMessage
@@ -19,10 +27,15 @@ func Parser(f http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "TodoMessage", TodoMessage)
+		ctx := context.WithValue(r.Context(), local.MessageFlagKey, TodoMessage)
 		newReq := r.WithContext(ctx)
 
 		f.ServeHTTP(w, newReq)
+
+		pass, ok := (newReq.Context().Value(local.ErrorFlagKey)).(bool)
+		if ok && pass {
+			return
+		}
 
 		List := newReq.Context().Value("Response")
 

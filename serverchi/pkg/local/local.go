@@ -21,3 +21,11 @@ func NewTodos() *TodoList {
 	var init = make(TodoList)
 	return &init
 }
+
+type contextKey string
+
+const (
+	ResponseFlagKey contextKey = "Response"
+	ErrorFlagKey    contextKey = "ErrorFlag"
+	MessageFlagKey  contextKey = "Message"
+)
