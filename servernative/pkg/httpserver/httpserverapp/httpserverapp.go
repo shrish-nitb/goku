@@ -14,8 +14,12 @@ type Context struct {
 	context.Context
 }
 
-func (c *Context) Locals() {
+func (c *Context) Set(key any, value any) {
+	*c = Context{context.WithValue(*c, key, value)}
+}
 
+func (c *Context) Get(key any) any {
+	return c.Value(key)
 }
 
 type HandlerFunc func(ctx *Context, w http.ResponseWriter, r *http.Request)
