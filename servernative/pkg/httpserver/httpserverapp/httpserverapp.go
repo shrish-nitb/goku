@@ -51,10 +51,10 @@ func (h *Handle) init() http.Handler {
 		newHandle.Use(HandlerFunc(func(hNew *Handle) {
 			fmt.Println("Request came to Routing Middleware")
 			for _, pattern := range h.routes {
-				hNew.mux.Handle(pattern.Target, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				hNew.mux.Handle(pattern.Target, http.StripPrefix("/todo", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					pattern.Handle.Context = hNew.Context
 					pattern.Handle.init().ServeHTTP(w, r)
-				}))
+				})))
 			}
 			hNew.mux.ServeHTTP(hNew.Writer, hNew.Request)
 		}))

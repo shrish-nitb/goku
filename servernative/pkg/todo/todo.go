@@ -1,7 +1,6 @@
 package todo
 
 import (
-	"fmt"
 	"log"
 	"servernative/pkg/httpserver/httpserverapp"
 	"sync"
@@ -40,31 +39,11 @@ func (List TodoList) CreateHandlers() *httpserverapp.Handle {
 	getTodoHandler := httpserverapp.New()
 	getTodoHandler.Use(httpserverapp.HandlerFunc(func(h *httpserverapp.Handle) {
 		log.Println("Request came to post handler function ", h.Request.Method, h.Request.URL.RequestURI())
-		fmt.Println(h.Context.Get("BODY"))
+		res := (h.Context.Get("BODY")).(string)
+		h.Writer.Header().Set("a", "b")
+		h.Writer.Write([]byte(res))
 	}))
 
-	todoHandler.AddRouter(httpserverapp.Pattern{Target: "POST /todo", Handle: getTodoHandler})
-
-	// switch r.Method {
-	// case "GET":
-	// 	{
-	// 		todoList, err := List.Read()
-	// 	}
-	// case "POST":
-	// 	{
-	// 		todoList, err := List.Create()
-	// 	}
-	// case "PATCH":
-	// 	{
-	// 		todoList, err := List.Update()
-	// 	}
-	// case "DELETE":
-	// 	{
-	// 		todoList, err := List.Delete()
-	// 	}
-	// default:
-
-	// }
-	//writing the response [TodoList]
+	todoHandler.AddRouter(httpserverapp.Pattern{Target: "GET /todo/{id}", Handle: getTodoHandler})
 	return todoHandler
 }
