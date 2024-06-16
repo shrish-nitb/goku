@@ -7,17 +7,18 @@ import (
 	"net/http"
 	pb "servernativebasic/gen/protos/todopb"
 	"strings"
-	"sync"
 	"time"
 )
 
+// TodoList inherently a map is passed by reference automatically
 func (List TodoList) Create() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 		TodoMessage := pb.TodoMessageRequest{}
 		body, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
-		if err != nil || json.Unmarshal(body, &TodoMessage) != nil || strings.TrimSpace(TodoMessage.Task.Value) == "" || strings.TrimSpace(TodoMessage.Id) == "" {
+		if err != nil || json.Unmarshal(body, &TodoMessage) != nil || strings.TrimSpace(TodoMessage.Task.Value) == "" ||
+			strings.TrimSpace(TodoMessage.Id) == "" {
 			http.Error(w, "Invalid request payload", http.StatusBadRequest)
 			return
 		}
@@ -27,10 +28,9 @@ func (List TodoList) Create() http.HandlerFunc {
 			return
 		}
 
-		var mu sync.Mutex
-		List[TodoMessage.Id] = Task{Mutex: &mu, Value: TodoMessage.Task.Value}
+		List[TodoMessage.Id] = &pb.Task{Value: TodoMessage.Task.Value}
 
-		response, err := json.Marshal(List)
+		response, err := json.Marshal(pb.TodoListResponse{List: List})
 
 		if err != nil {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)

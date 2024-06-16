@@ -1,20 +1,10 @@
 package todo
 
 import (
-	"sync"
+	pb "servernativebasic/gen/protos/todopb"
 )
 
-type Task struct {
-	Mutex *sync.Mutex `json:"-"`
-	Value string      `json:"value"`
-}
-
-type TodoMessage struct {
-	Id   string `json:"id"`
-	Task Task   `json:"task"`
-}
-
-type TodoList map[string]Task
+type TodoList map[string]*pb.Task
 
 func NewTodos() *TodoList {
 	var init = make(TodoList)

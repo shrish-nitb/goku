@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	pb "servernativebasic/gen/protos/todopb"
 	"strings"
 	"time"
 )
@@ -12,8 +13,7 @@ import (
 func (List TodoList) Update() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
-
-		var TodoMessage TodoMessage
+		TodoMessage := pb.TodoMessageRequest{}
 		body, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
 
@@ -27,12 +27,9 @@ func (List TodoList) Update() http.HandlerFunc {
 			return
 		}
 
-		List[TodoMessage.Id].Mutex.Lock()
-		defer List[TodoMessage.Id].Mutex.Unlock()
+		List[TodoMessage.Id] = &pb.Task{Value: TodoMessage.Task.Value}
 
-		List[TodoMessage.Id] = Task{Mutex: List[TodoMessage.Id].Mutex, Value: TodoMessage.Task.Value}
-
-		response, err := json.Marshal(List)
+		response, err := json.Marshal(pb.TodoListResponse{List: List})
 
 		if err != nil {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)

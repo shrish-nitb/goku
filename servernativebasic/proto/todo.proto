@@ -12,11 +12,7 @@ message TodoMessageRequest {
     Task Task = 2;
 }
 
-message TodoList {
-    map<string, Task> List = 1;
-}
-
 message TodoListResponse{
-    TodoList List = 1;
+    map<string, Task> List = 1;
 }
 

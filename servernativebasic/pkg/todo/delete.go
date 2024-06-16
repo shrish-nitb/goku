@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	pb "servernativebasic/gen/protos/todopb"
 	"strings"
 	"time"
 )
@@ -12,12 +13,11 @@ import (
 func (List TodoList) Delete() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
-
-		var TodoMessage TodoMessage
+		TodoMessage := pb.TodoMessageRequest{}
 		body, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
 
-		if err != nil || json.Unmarshal(body, &TodoMessage) != nil || strings.TrimSpace(TodoMessage.Task.Value) == "" || strings.TrimSpace(TodoMessage.Id) == "" {
+		if err != nil || json.Unmarshal(body, &TodoMessage) != nil || strings.TrimSpace(TodoMessage.Id) == "" {
 			http.Error(w, "Invalid request payload", http.StatusBadRequest)
 			return
 		}
@@ -27,12 +27,9 @@ func (List TodoList) Delete() http.HandlerFunc {
 			return
 		}
 
-		List[TodoMessage.Id].Mutex.Lock()
-		defer List[TodoMessage.Id].Mutex.Unlock()
-
 		delete(List, TodoMessage.Id)
 
-		response, err := json.Marshal(List)
+		response, err := json.Marshal(pb.TodoListResponse{List: List})
 
 		if err != nil {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
