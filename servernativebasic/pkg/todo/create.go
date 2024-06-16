@@ -1,4 +1,4 @@
-package local
+package todo
 
 import (
 	"encoding/json"
@@ -6,31 +6,29 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
-func (List TodoList) Delete() http.HandlerFunc {
+func (List TodoList) Create() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 
 		var TodoMessage TodoMessage
 		body, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
-
 		if err != nil || json.Unmarshal(body, &TodoMessage) != nil || strings.TrimSpace(TodoMessage.Task.Value) == "" || strings.TrimSpace(string(TodoMessage.Id)) == "" {
 			http.Error(w, "Invalid request payload", http.StatusBadRequest)
 			return
 		}
 
-		if _, exist := List[TodoMessage.Id]; !exist {
-			http.Error(w, "Resource Not Found", http.StatusNotFound)
+		if _, exist := List[TodoMessage.Id]; exist {
+			http.Error(w, "Resource already exist", http.StatusConflict)
 			return
 		}
 
-		List[TodoMessage.Id].Mutex.Lock()
-		defer List[TodoMessage.Id].Mutex.Unlock()
-
-		delete(List, TodoMessage.Id)
+		var mu sync.Mutex
+		List[TodoMessage.Id] = Task{Mutex: &mu, Value: TodoMessage.Task.Value}
 
 		response, err := json.Marshal(List)
 
@@ -43,7 +41,6 @@ func (List TodoList) Delete() http.HandlerFunc {
 		responseSize, _ := w.Write(response)
 
 		elapsedTime := time.Since(startTime)
-
-		log.Printf("Request Time Taken: %s, Response Size: %d bytes", elapsedTime, responseSize)
+		log.Println("Request Time Taken:", elapsedTime, " Response Size: ", responseSize, "bytes")
 	})
 }

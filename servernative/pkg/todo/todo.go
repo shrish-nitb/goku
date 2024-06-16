@@ -4,6 +4,7 @@ import (
 	"log"
 	"servernative/pkg/httpserver/httpserverapp"
 	"sync"
+	"time"
 )
 
 type Id string
@@ -38,12 +39,14 @@ func (List TodoList) CreateHandlers() *httpserverapp.Handle {
 
 	getTodoHandler := httpserverapp.New()
 	getTodoHandler.Use(httpserverapp.HandlerFunc(func(h *httpserverapp.Handle) {
-		log.Println("Request came to post handler function ", h.Request.Method, h.Request.URL.RequestURI())
+		log.Println("Request came to GET handler function ", h.Request.Method, h.Request.URL.RequestURI())
+		time.Sleep(30 * time.Second)
 		res := (h.Context.Get("BODY")).(string)
 		h.Writer.Header().Set("a", "b")
 		h.Writer.Write([]byte(res))
+		log.Println("Response sent")
 	}))
 
-	todoHandler.AddRouter(httpserverapp.Pattern{Target: "GET /todo/{id}", Handle: getTodoHandler})
+	todoHandler.AddRoute(httpserverapp.Route{Pattern: "GET /todo/{id}", Handle: getTodoHandler})
 	return todoHandler
 }

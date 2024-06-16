@@ -1,4 +1,4 @@
-package local
+package todo
 
 import (
 	"encoding/json"
@@ -22,6 +22,6 @@ func (List TodoList) Read() http.HandlerFunc {
 		responseSize, _ := w.Write(response)
 
 		elapsedTime := time.Since(startTime)
-		log.Printf("Request Time Taken: %s, Response Size: %d bytes", elapsedTime, responseSize)
+		log.Println("Request Time Taken:", elapsedTime, "ns Response Size: ", responseSize, "bytes")
 	})
 }

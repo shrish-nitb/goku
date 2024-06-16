@@ -2,7 +2,6 @@ package httpserverapp
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 )
@@ -24,17 +23,17 @@ func (c *Context) Get(key any) any {
 }
 
 type HandlerFunc func(h *Handle)
-type Pattern struct {
-	Target string
-	Handle *Handle
+type Route struct {
+	Pattern string
+	Handle  *Handle
 }
 type Handle struct {
-	Context *Context
-	Writer  http.ResponseWriter
-	Request *http.Request
-	mux     *http.ServeMux
-	pass    []HandlerFunc
-	routes  []Pattern
+	Context     *Context
+	Writer      http.ResponseWriter
+	Request     *http.Request
+	mux         *http.ServeMux
+	middlewares []HandlerFunc
+	routes      []Route
 }
 
 func (h *Handle) init() http.Handler {
@@ -44,16 +43,16 @@ func (h *Handle) init() http.Handler {
 			ctx = &Context{context.Background()}
 		}
 		newHandle := h.clone()
-		fmt.Printf("New Handler Cloned at %p\n", newHandle)
+		log.Printf("New Handle Cloned at %p\n", newHandle)
 		newHandle.Context = ctx
 		newHandle.Writer = w
 		newHandle.Request = r
 		newHandle.Use(HandlerFunc(func(hNew *Handle) {
-			fmt.Println("Request came to Routing Middleware")
-			for _, pattern := range h.routes {
-				hNew.mux.Handle(pattern.Target, http.StripPrefix("/todo", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					pattern.Handle.Context = hNew.Context
-					pattern.Handle.init().ServeHTTP(w, r)
+			log.Println("Request came to Routing Middleware")
+			for _, route := range h.routes {
+				hNew.mux.Handle(route.Pattern, http.StripPrefix("/todo", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					route.Handle.Context = hNew.Context
+					route.Handle.init().ServeHTTP(w, r)
 				})))
 			}
 			hNew.mux.ServeHTTP(hNew.Writer, hNew.Request)
@@ -64,31 +63,31 @@ func (h *Handle) init() http.Handler {
 
 func (h *Handle) clone() *Handle {
 	clone := New()
-	clone.pass = append(clone.pass, h.pass...)
+	clone.middlewares = append(clone.middlewares, h.middlewares...)
 	clone.routes = append(clone.routes, h.routes...)
 	return clone
 }
 
-func (h *Handle) AddRouter(pattern Pattern) {
-	h.routes = append(h.routes, pattern)
+func (h *Handle) AddRoute(route Route) {
+	h.routes = append(h.routes, route)
 }
 
 func (h *Handle) Pass(successor *Handle) {
 	h.Use(HandlerFunc(func(h *Handle) {
-		fmt.Printf("Request passed through Handle Transfer Middleware shutting %p\n", h)
+		log.Printf("Request passed through Handle Transfer Middleware shutting %p\n", h)
 		successor.Context = h.Context
 		successor.init().ServeHTTP(h.Writer, h.Request)
 	}))
 }
 
 func (h *Handle) Use(f HandlerFunc) {
-	h.pass = append(h.pass, f)
+	h.middlewares = append(h.middlewares, f)
 }
 
 func (h *Handle) Next() {
-	fmt.Printf("Invoked by %p\n", h)
-	tmp := h.pass[0]
-	h.pass = h.pass[1:]
+	log.Printf("Invoked by %p\n", h)
+	tmp := h.middlewares[0]
+	h.middlewares = h.middlewares[1:]
 	tmp(h)
 }
 

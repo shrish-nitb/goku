@@ -3,12 +3,16 @@ package local
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func (List TodoList) Update() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		startTime := time.Now()
+
 		var TodoMessage TodoMessage
 		body, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
@@ -36,6 +40,9 @@ func (List TodoList) Update() http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write(response)
+		responseSize, _ := w.Write(response)
+
+		elapsedTime := time.Since(startTime)
+		log.Printf("Request Time Taken: %s, Response Size: %d bytes", elapsedTime, responseSize)
 	})
 }

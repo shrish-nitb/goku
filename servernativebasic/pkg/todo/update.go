@@ -1,4 +1,4 @@
-package local
+package todo
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func (List TodoList) Delete() http.HandlerFunc {
+func (List TodoList) Update() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 
@@ -30,7 +30,7 @@ func (List TodoList) Delete() http.HandlerFunc {
 		List[TodoMessage.Id].Mutex.Lock()
 		defer List[TodoMessage.Id].Mutex.Unlock()
 
-		delete(List, TodoMessage.Id)
+		List[TodoMessage.Id] = Task{Mutex: List[TodoMessage.Id].Mutex, Value: TodoMessage.Task.Value}
 
 		response, err := json.Marshal(List)
 
@@ -43,7 +43,6 @@ func (List TodoList) Delete() http.HandlerFunc {
 		responseSize, _ := w.Write(response)
 
 		elapsedTime := time.Since(startTime)
-
-		log.Printf("Request Time Taken: %s, Response Size: %d bytes", elapsedTime, responseSize)
+		log.Println("Request Time Taken:", elapsedTime, "ns Response Size: ", responseSize, "bytes")
 	})
 }
