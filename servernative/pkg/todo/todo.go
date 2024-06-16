@@ -34,7 +34,8 @@ type Error struct {
 
 func (List TodoList) CreateHandlers() *httpserverapp.Handle {
 	todoHandler := httpserverapp.New()
-	todoHandler.Use(middleware.Logger((todoHandler)))
+	middleware.Logger(todoHandler)
+
 	todoHandler.Use(func(ctx *httpserverapp.Context, w http.ResponseWriter, r *http.Request) {
 		log.Println("Request came to todo handler ", r.Method, r.URL.RequestURI())
 		fmt.Println(ctx.Get("BODY"))

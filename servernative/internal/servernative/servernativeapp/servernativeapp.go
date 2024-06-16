@@ -19,11 +19,11 @@ func Run() {
 	masterHandle := httpserverapp.New()
 
 	//-> Logger <-> Parser <-> todoHandler
-	masterHandle.Use(middleware.Logger(masterHandle))
-	masterHandle.Use(middleware.BodyParser(masterHandle))
+	middleware.Logger(masterHandle)
+	middleware.BodyParser(masterHandle)
 	masterHandle.Pass(todoHandler)
 	todoHandler.Pass(masterHandle)
-	masterHandle.Use(middleware.Logger(masterHandle))
+	middleware.Logger(masterHandle)
 	log.Println("masterHandle at ", &masterHandle)
 	log.Println("todoHandle at ", &todoHandler)
 
