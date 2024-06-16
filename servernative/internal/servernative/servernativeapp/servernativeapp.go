@@ -1,6 +1,7 @@
 package servernativeapp
 
 import (
+	"log"
 	"servernative/pkg/httpserver/httpserverapp"
 	"servernative/pkg/httpserver/httpserverapp/middleware"
 	"servernative/pkg/todo"
@@ -23,6 +24,8 @@ func Run() {
 	masterHandle.Pass(todoHandler)
 	todoHandler.Pass(masterHandle)
 	masterHandle.Use(middleware.Logger(masterHandle))
+	log.Println("masterHandle at ", &masterHandle)
+	log.Println("todoHandle at ", &todoHandler)
 
 	httpserverapp.Run(&config, masterHandle)
 }
