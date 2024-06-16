@@ -21,6 +21,8 @@ func Run() {
 	masterHandle.Use(middleware.Logger(masterHandle))
 	masterHandle.Use(middleware.BodyParser(masterHandle))
 	masterHandle.Pass(todoHandler)
+	todoHandler.Pass(masterHandle)
+	masterHandle.Use(middleware.Logger(masterHandle))
 
 	httpserverapp.Run(&config, masterHandle)
 }
