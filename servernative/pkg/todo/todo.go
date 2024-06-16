@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"servernative/pkg/httpserver/httpserverapp"
+	"servernative/pkg/httpserver/httpserverapp/middleware"
 	"sync"
 )
 
@@ -32,9 +33,10 @@ type Error struct {
 
 func (List TodoList) CreateHandlers() *httpserverapp.Handle {
 	todoHandler := httpserverapp.New()
+	todoHandler.Use(middleware.Logger((todoHandler)))
 	todoHandler.Use(func(ctx *httpserverapp.Context, w http.ResponseWriter, r *http.Request) {
 		log.Println("Request came to todo handler ", r.Method, r.URL.RequestURI())
-		w.Write([]byte("todolist"))
+		todoHandler.Next()
 	})
 
 	// switch r.Method {
