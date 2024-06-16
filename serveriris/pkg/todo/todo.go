@@ -1,7 +1,9 @@
-package local
+package todo
 
 import (
 	"sync"
+
+	"github.com/kataras/iris/v12"
 )
 
 type Id string
@@ -20,4 +22,16 @@ type TodoList map[Id]Task
 func NewTodos() *TodoList {
 	var init = make(TodoList)
 	return &init
+}
+
+type Error struct {
+	Message string
+	Code    int
+}
+
+func (todoMessage *TodoMessage) Parse(ctx iris.Context) error {
+	if err := ctx.ReadJSON(todoMessage); err != nil {
+		return err
+	}
+	return nil
 }

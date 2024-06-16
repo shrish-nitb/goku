@@ -1,50 +1,73 @@
 package httpserverapp
 
 import (
+	"context"
 	"log"
 	"net/http"
-	"servernative/pkg/httpserver/middleware/logger"
-	"servernative/pkg/httpserver/middleware/parser"
 )
 
 type Config struct {
 	Addr string
-	Root []Root
 }
 
-type Root struct {
-	Name     string
-	Handlers []http.Handler
+type Context struct {
+	context.Context
 }
 
-type RootList []Root
+func (c *Context) Locals() {
 
-func (RootList *RootList) Bind() *http.ServeMux {
-	rootController := http.NewServeMux()
-	for _, root := range *RootList {
-		for _, handler := range root.Handlers {
-			rootController.Handle(root.Name, handler)
-		}
+}
+
+type HandlerFunc func(ctx *Context, w http.ResponseWriter, r *http.Request)
+
+type Handle struct {
+	ctx  *Context
+	w    http.ResponseWriter
+	r    *http.Request
+	pass []HandlerFunc
+}
+
+func (h *Handle) init() http.Handler {
+	ctx := Context{context.Background()}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h.ctx = &ctx
+		h.w = w
+		h.r = r
+		h.Next()
+	})
+}
+
+func (h *Handle) Use(f HandlerFunc) {
+	h.pass = append(h.pass, f)
+}
+
+func (h *Handle) Pass(successor *Handle) {
+	h.Use(HandlerFunc(func(ctx *Context, w http.ResponseWriter, r *http.Request) {
+		successor.ctx = h.ctx
+		successor.w = h.w
+		successor.r = h.r
+		successor.Next()
+	}))
+}
+
+func (h *Handle) Next() {
+	if len(h.pass) == 0 {
+		return
 	}
-
-	return rootController
+	tmp := h.pass[0]
+	h.pass = h.pass[1:]
+	tmp(h.ctx, h.w, h.r)
 }
 
-func Chainer(Router http.Handler, middlewareCollection []func(http.Handler) http.Handler) http.Handler {
-	wrappedMiddleware := Router
-	for i := len(middlewareCollection); i > 0; i-- {
-		wrappedMiddleware = middlewareCollection[i-1](wrappedMiddleware)
-	}
-	return wrappedMiddleware
+func New() *Handle {
+	return &Handle{}
 }
 
-func Run(config *Config, Router http.Handler) {
-	middlewareCollection := []func(http.Handler) http.Handler{logger.Logger, parser.Parser}
-	masterHandle := Chainer(Router, middlewareCollection)
+func Run(config *Config, masterHandle *Handle) {
 	server := http.Server{
 		Addr:    config.Addr,
-		Handler: masterHandle,
+		Handler: masterHandle.init(),
 	}
-	log.Println("server started")
+	log.Printf("server started at %s", config.Addr)
 	server.ListenAndServe()
 }

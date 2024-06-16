@@ -1,33 +1,26 @@
 package servernativeapp
 
 import (
-	"fmt"
 	"servernative/pkg/httpserver/httpserverapp"
-	"servernative/pkg/local"
+	"servernative/pkg/httpserver/httpserverapp/middleware"
+	"servernative/pkg/todo"
 )
 
 func Run() {
-	root := httpserverapp.Root{
-		Name: "/api/v1",
-	}
+	todos := todo.NewTodos()
 
-	todos := local.Document{
-		Name: "todo",
-	}
-
-	todoHandler := todos.CreateHandlers(local.Prefix{"todo"})
-
-	root.Handlers = append(root.Handlers, todoHandler)
-
-	rootCollection := httpserverapp.RootList{root}
-
-	fmt.Println(rootCollection)
-
-	router := rootCollection.Bind()
+	todoHandler := todos.CreateHandlers()
 
 	config := httpserverapp.Config{
 		Addr: "127.0.0.1:8000",
 	}
 
-	httpserverapp.Run(&config, router)
+	masterHandle := httpserverapp.New()
+
+	//-> Logger <-> Parser <-> todoHandler
+	masterHandle.Use(middleware.Logger(masterHandle))
+	masterHandle.Use(middleware.BodyParser(masterHandle))
+	masterHandle.Pass(todoHandler)
+
+	httpserverapp.Run(&config, masterHandle)
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 )
 
 func (List TodoList) Delete() http.HandlerFunc {
@@ -12,7 +13,7 @@ func (List TodoList) Delete() http.HandlerFunc {
 		body, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
 
-		if err != nil || json.Unmarshal(body, &TodoMessage) != nil {
+		if err != nil || json.Unmarshal(body, &TodoMessage) != nil || strings.TrimSpace(TodoMessage.Task.Value) == "" || strings.TrimSpace(string(TodoMessage.Id)) == "" {
 			http.Error(w, "Invalid request payload", http.StatusBadRequest)
 			return
 		}
