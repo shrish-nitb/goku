@@ -11,6 +11,7 @@ func main() {
 	todoList := todo.NewTodos()
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /proto/todo", todoList.ReadProto())
 	mux.HandleFunc("GET /todo", todoList.Read())
 	mux.HandleFunc("POST /todo", todoList.Create())
 	mux.HandleFunc("PUT /todo", todoList.Update())

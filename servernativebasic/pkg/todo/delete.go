@@ -17,7 +17,7 @@ func (List TodoList) Delete() http.HandlerFunc {
 		body, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
 
-		if err != nil || json.Unmarshal(body, &TodoMessage) != nil || strings.TrimSpace(TodoMessage.Task.Value) == "" || strings.TrimSpace(string(TodoMessage.Id)) == "" {
+		if err != nil || json.Unmarshal(body, &TodoMessage) != nil || strings.TrimSpace(TodoMessage.Task.Value) == "" || strings.TrimSpace(TodoMessage.Id) == "" {
 			http.Error(w, "Invalid request payload", http.StatusBadRequest)
 			return
 		}

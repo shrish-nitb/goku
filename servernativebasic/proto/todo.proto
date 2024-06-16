@@ -1,0 +1,22 @@
+syntax = "proto3";
+package proto;
+option go_package = "../gen/protos/todopb";
+
+
+message Task {
+    string Value = 1;
+}
+
+message TodoMessageRequest {
+    string Id = 1;
+    Task Task = 2;
+}
+
+message TodoList {
+    map<string, Task> List = 1;
+}
+
+message TodoListResponse{
+    TodoList List = 1;
+}
+
