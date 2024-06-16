@@ -3,9 +3,7 @@ package todo
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"servernative/pkg/httpserver/httpserverapp"
-	"servernative/pkg/httpserver/httpserverapp/middleware"
 	"sync"
 )
 
@@ -34,13 +32,18 @@ type Error struct {
 
 func (List TodoList) CreateHandlers() *httpserverapp.Handle {
 	todoHandler := httpserverapp.New()
-	middleware.Logger(todoHandler)
+	todoHandler.Use(httpserverapp.HandlerFunc(func(h *httpserverapp.Handle) {
+		log.Println("Request came to todo handler middleware")
+		h.Next()
+	}))
 
-	todoHandler.Use(func(ctx *httpserverapp.Context, w http.ResponseWriter, r *http.Request) {
-		log.Println("Request came to todo handler ", r.Method, r.URL.RequestURI())
-		fmt.Println(ctx.Get("BODY"))
-		todoHandler.Next()
-	})
+	getTodoHandler := httpserverapp.New()
+	getTodoHandler.Use(httpserverapp.HandlerFunc(func(h *httpserverapp.Handle) {
+		log.Println("Request came to post handler function ", h.Request.Method, h.Request.URL.RequestURI())
+		fmt.Println(h.Context.Get("BODY"))
+	}))
+
+	todoHandler.AddRouter(httpserverapp.Pattern{Target: "POST /todo", Handle: getTodoHandler})
 
 	// switch r.Method {
 	// case "GET":
